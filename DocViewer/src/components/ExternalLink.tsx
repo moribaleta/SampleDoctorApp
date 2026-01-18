@@ -16,7 +16,8 @@ export function ExternalLink({ href, children, ...rest }: Props) {
           // On native, open in in-app browser
           await openBrowserAsync(href);
         }
-      }}>
+      }}
+    >
       {children}
     </Pressable>
   );

@@ -1,48 +1,58 @@
-import { StyleSheet, View } from 'react-native';
+import { ListRenderItemInfo, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { ThemedText } from '@/components/ThemedText';
+import { Typo } from '@/components/Typo';
 import { ThemedView } from '@/components/ThemedView';
-import { Doctor } from '@/types/index';
-import { use } from 'react';
 import { FlatList } from 'react-native-gesture-handler';
-import { useQuery } from '@tanstack/react-query';
 import { Header } from '@react-navigation/elements';
-
-
-const fetchData = async () : Promise<Doctor[]> => { 
-  const response = await fetch('https://raw.githubusercontent.com/suyogshiftcare/jsontest/main/available.json');
-  return response.json();
-}
+import { DoctorSchedule, useDoctorsSchedule } from '@/hooks/useDoctorsSchedule';
+import { useCallback } from 'react';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '..';
 
 export function Home() {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const {data, isLoading} = useQuery<Doctor[]>({
-    queryKey: ['doctors'],
-    queryFn: fetchData,
-  });
+  const {
+    doctorSchedules: { data, isLoading },
+  } = useDoctorsSchedule();
+
+  const onViewSchedule = useCallback(
+    (index: number) => {
+      if (data && data[index]) {
+        navigation.navigate('ScheduleModal', { doctorName: data[index].name });
+      }
+    },
+    [data, navigation],
+  );
+
+  const renderCell = useCallback(
+    ({ item, index }: ListRenderItemInfo<DoctorSchedule>) => (
+      <TouchableOpacity onPress={() => onViewSchedule(index)}>
+        <ThemedView style={styles.doctorItem}>
+          <Typo type="subtitle">{item.name}</Typo>
+          <Typo>Timezone: {item.timezone}</Typo>
+        </ThemedView>
+      </TouchableOpacity>
+    ),
+    [onViewSchedule],
+  );
 
   if (isLoading) {
-    return (<View style={styles.container}>
-      <ThemedText>Loading...</ThemedText>
-    </View>
+    return (
+      <View style={styles.container}>
+        <Typo>Loading...</Typo>
+      </View>
     );
   }
 
   return (
     <View style={styles.container}>
       <Header title="Available Doctors" />
-      <FlatList data={data}
+      <FlatList
+        data={data ?? []}
         style={styles.listContainer}
-        renderItem={({item}) => (
-          <ThemedView style={styles.doctorItem} >
-            <ThemedText type="subtitle">{item.name}</ThemedText>
-            <ThemedText>Timezone: {item.timezone}</ThemedText>
-            <ThemedText>Day of Week: {item.day_of_week}</ThemedText>
-            <ThemedText>Available At: {item.available_at}</ThemedText>
-            <ThemedText>Available Until: {item.available_until}</ThemedText>
-          </ThemedView>
-        )}
-        keyExtractor={(item, index) => index.toString()}
+        renderItem={renderCell}
+        keyExtractor={(_item, index) => index.toString()}
       />
     </View>
   );
@@ -53,7 +63,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  listContainer: { 
+  listContainer: {
     padding: 16,
   },
 

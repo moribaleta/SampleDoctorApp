@@ -1,10 +1,11 @@
 import { ThemedView } from '@/components/ThemedView';
 import { Typo } from '@/components/Typo';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { RootStackParamList } from '..';
-import { Schedule, useDoctorsSchedule } from '@/hooks/useDoctorsSchedule';
+import { Schedule, Timeslot, useDoctorsSchedule } from '@/hooks/useDoctorsSchedule';
 import { useMemo } from 'react';
+import { ScheduleCollapsible } from '@/components/ScheduleCollapsible';
 
 type ScheduleModalRouteProp = RouteProp<RootStackParamList, 'ScheduleModal'>;
 
@@ -12,84 +13,89 @@ export const ScheduleModal = () => {
   const route = useRoute<ScheduleModalRouteProp>();
   const navigation = useNavigation();
   const { doctorName } = route.params;
-  const { getDoctorByName, setSchedule } = useDoctorsSchedule();
+  const { getDoctorByName, bookSchedule } = useDoctorsSchedule();
 
-  const handleSetSchedule = (schedule: Schedule) => {
+  /* const userBookedScheduleOfCurrentDoctor = useMemo(() => {
+    return userBookedSchedules.data?.find((item) => item.doctorName === doctorName);
+  }, [doctorName, userBookedSchedules.data]); */
+
+  const handleSetSchedule = (dayOfWeek: string, timeslot: Timeslot) => {
     if (doctorName) {
-      setSchedule({ doctorName, schedule });
+      bookSchedule({
+        doctorName,
+        dayOfWeek,
+        timeslot,
+      });
     }
 
     navigation.goBack();
   };
 
-  const doctor = useMemo(() => {
+  const doctorWithSchedules = useMemo(() => {
     return doctorName ? getDoctorByName(doctorName) : undefined;
   }, [doctorName, getDoctorByName]);
 
-  return (
-    <View style={styles.internalModalContainer}>
-      {doctor && (
-        <ThemedView style={styles.contentContainer}>
-          <ThemedView style={styles.subtitleContainer}>
-            <Typo type="title">{doctor?.name}</Typo>
-            <Typo type="subtitle">Timezone: {doctor?.timezone}</Typo>
-          </ThemedView>
+  const renderCell = (schedule: Schedule) => {
+    /* const isAlreadyBooked =
+      userBookedScheduleOfCurrentDoctor?.schedule.dayOfWeek === schedule.dayOfWeek &&
+      userBookedScheduleOfCurrentDoctor?.schedule.availableAt === schedule.availableAt &&
+      userBookedScheduleOfCurrentDoctor?.schedule.availableUntil === schedule.availableUntil; */
 
-          <ThemedView style={styles.listContainer}>
-            <Typo type="subtitle">Select a schedule:</Typo>
-            {doctor &&
-              doctor.schedules.map((schedule, index) => (
-                <TouchableOpacity onPress={() => handleSetSchedule(schedule)} key={index}>
-                  <ThemedView style={styles.listItem} lightColor="#f0f0f0" darkColor="#1a1a1a">
-                    <Typo type="subtitle">{schedule.day_of_week}</Typo>
-                    <Typo>
-                      Available from {schedule.available_at} to {schedule.available_until}
-                    </Typo>
-                  </ThemedView>
-                </TouchableOpacity>
-              ))}
-          </ThemedView>
-        </ThemedView>
-      )}
-    </View>
+    return (
+      <ScheduleCollapsible
+        key={schedule.dayOfWeek}
+        dayOfWeek={schedule.dayOfWeek}
+        availableAt={schedule.availableAt}
+        availableUntil={schedule.availableUntil}
+        timeslots={schedule.timeslots}
+        onSelect={handleSetSchedule}
+      />
+    );
+  };
+
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.headerContainer}>
+        <Typo type="title">{doctorWithSchedules?.name}</Typo>
+        <Typo type="subtitle">Timezone: {doctorWithSchedules?.timezone}</Typo>
+      </ThemedView>
+
+      <ThemedView style={styles.contentContainer}>
+        <Typo type="subtitle">Select a schedule:</Typo>
+        <FlatList
+          style={styles.listContainer}
+          contentContainerStyle={styles.listContentContainer}
+          data={doctorWithSchedules?.schedules}
+          keyExtractor={(_item, index) => index.toString()}
+          renderItem={({ item }) => renderCell(item)}
+        />
+      </ThemedView>
+    </ThemedView>
   );
 };
 
 const styles = StyleSheet.create({
-  internalModalContainer: {
+  container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    width: '100%',
-  },
-
-  contentContainer: {
-    flexShrink: 1,
-    borderRadius: 8,
-    gap: 16,
     padding: 24,
+    gap: 24,
   },
 
   headerContainer: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  subtitleContainer: {
-    marginBottom: 16,
+    gap: 8,
   },
 
-  listContainer: {
+  contentContainer: {
+    flex: 1,
     gap: 12,
   },
 
-  listItem: {
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginBottom: 8,
+  listContainer: {
+    flex: 1,
+    gap: 12,
+  },
+
+  listContentContainer: {
+    gap: 12,
   },
 });

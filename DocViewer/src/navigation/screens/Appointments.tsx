@@ -5,23 +5,60 @@ import { ThemedView } from '@/components/ThemedView';
 import { Header } from '@react-navigation/elements';
 import { useDoctorsSchedule, UserBookedSchedule } from '@/hooks/useDoctorsSchedule';
 import { IconButton } from '@/components/IconButton';
+import { useMemo } from 'react';
+import dayjs from 'dayjs';
+
+const DAY_OF_WEEK_ORDER = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
 
 export function Appointments() {
   const {
     userBookedSchedules: { data, isLoading },
-    deleteSchedule,
+    cancelSchedule,
   } = useDoctorsSchedule();
+
+  const viewBookedSchedules = useMemo(() => {
+    const dayOrderMap = DAY_OF_WEEK_ORDER.reduce<Record<string, UserBookedSchedule[]>>(
+      (acc, day) => {
+        acc[day] = [];
+        return acc;
+      },
+      {},
+    );
+
+    (data ?? []).forEach((schedule) => {
+      const day = schedule.dayOfWeek;
+      const list = dayOrderMap[day];
+      list.push(schedule);
+    });
+
+    Object.keys(dayOrderMap).forEach((day) => {
+      dayOrderMap[day].sort((a, b) => {
+        const timeA = dayjs(a.timeslot.timeStart, 'h:mmA').format('HH:mm');
+        const timeB = dayjs(b.timeslot.timeStart, 'h:mmA').format('HH:mm');
+        return timeA.localeCompare(timeB);
+      });
+    });
+
+    return Object.values(dayOrderMap).flat();
+  }, [data]);
 
   const renderCell = ({ item }: { item: UserBookedSchedule }) => (
     <ThemedView style={styles.doctorItem}>
       <View style={styles.doctorItemInfo}>
         <Typo type="subtitle">{item.doctorName}</Typo>
         <Typo>
-          {item.schedule.day_of_week}: {item.schedule.available_at} -{' '}
-          {item.schedule.available_until}
+          {item.dayOfWeek}: {item.timeslot.timeStart} - {item.timeslot.timeEnd}
         </Typo>
       </View>
-      <IconButton name="close" onPress={() => deleteSchedule({ doctorName: item.doctorName })} />
+      <IconButton name="close" onPress={() => cancelSchedule(item)} />
     </ThemedView>
   );
 
@@ -37,7 +74,7 @@ export function Appointments() {
     <View style={styles.container}>
       <Header title="Schedule Appointments" />
       <FlatList
-        data={data}
+        data={viewBookedSchedules}
         style={styles.listContainer}
         renderItem={renderCell}
         keyExtractor={(_item, index) => index.toString()}

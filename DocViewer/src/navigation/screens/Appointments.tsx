@@ -7,6 +7,7 @@ import { useDoctorsSchedule, UserBookedSchedule } from '@/hooks/useDoctorsSchedu
 import { IconButton } from '@/components/IconButton';
 import { useMemo } from 'react';
 import dayjs from 'dayjs';
+import { alert } from '@/components/ui/Alert';
 
 const DAY_OF_WEEK_ORDER = [
   'Monday',
@@ -50,6 +51,21 @@ export function Appointments() {
     return Object.values(dayOrderMap).flat();
   }, [data]);
 
+  const handleCancelSchedule = (schedule: UserBookedSchedule) => {
+    alert('Cancel Schedule', 'Are you sure you want to cancel this schedule?', [
+      {
+        text: 'No',
+        style: 'cancel',
+      },
+      {
+        text: 'Yes',
+        onPress: () => {
+          cancelSchedule(schedule);
+        },
+      },
+    ]);
+  };
+
   const renderCell = ({ item }: { item: UserBookedSchedule }) => (
     <ThemedView style={styles.doctorItem}>
       <View style={styles.doctorItemInfo}>
@@ -58,7 +74,7 @@ export function Appointments() {
           {item.dayOfWeek}: {item.timeslot.timeStart} - {item.timeslot.timeEnd}
         </Typo>
       </View>
-      <IconButton name="close" onPress={() => cancelSchedule(item)} />
+      <IconButton name="close" onPress={() => handleCancelSchedule(item)} />
     </ThemedView>
   );
 

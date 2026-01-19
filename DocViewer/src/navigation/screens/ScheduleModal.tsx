@@ -1,11 +1,12 @@
 import { ThemedView } from '@/components/ThemedView';
 import { Typo } from '@/components/Typo';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import { StyleSheet, FlatList, Alert } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { RootStackParamList } from '..';
 import { Schedule, Timeslot, useDoctorsSchedule } from '@/hooks/useDoctorsSchedule';
 import { useMemo } from 'react';
 import { ScheduleCollapsible } from '@/components/ScheduleCollapsible';
+import { alert } from '@/components/ui/Alert';
 
 type ScheduleModalRouteProp = RouteProp<RootStackParamList, 'ScheduleModal'>;
 
@@ -39,17 +40,27 @@ export const ScheduleModal = () => {
 
     //schedule already booked
     if (timeslotAlreadyBooked(dayOfWeek, timeslot)) {
-      Alert.alert('Schedule already booked', 'You have already booked this schedule.');
+      alert('Schedule already booked', 'You have already booked this schedule.');
       return;
     }
 
-    bookSchedule({
-      doctorName,
-      dayOfWeek,
-      timeslot,
-    });
-
-    navigation.goBack();
+    alert(
+      'Confirm Booking',
+      `Do you want to book this schedule?\n\n${dayOfWeek}, ${timeslot.timeStart} - ${timeslot.timeEnd}`,
+      [
+        {
+          text: 'No',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            bookSchedule({ doctorName, dayOfWeek, timeslot });
+            navigation.goBack();
+          },
+        },
+      ],
+    );
   };
 
   const doctorWithSchedules = useMemo(() => {

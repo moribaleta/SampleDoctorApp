@@ -7,7 +7,7 @@ import { useDoctorsSchedule, UserBookedSchedule } from '@/hooks/useDoctorsSchedu
 import { IconButton } from '@/components/IconButton';
 import { useMemo } from 'react';
 import dayjs from 'dayjs';
-import { alert } from '@/components/ui/Alert';
+import { alert } from '@/components/Alert';
 
 const DAY_OF_WEEK_ORDER = [
   'Monday',

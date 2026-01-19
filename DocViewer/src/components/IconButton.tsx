@@ -1,5 +1,5 @@
 import { useTheme } from '@react-navigation/native';
-import { IconSymbolName, IconSymbolProps, IconSymbol } from './ui/IconSymbol';
+import { IconSymbolName, IconSymbolProps, IconSymbol } from './IconSymbol';
 import { TouchableOpacity } from 'react-native';
 
 type IconButtonProps = Partial<IconSymbolProps> & {

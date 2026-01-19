@@ -6,7 +6,7 @@ import { RootStackParamList } from '..';
 import { Schedule, Timeslot, useDoctorsSchedule } from '@/hooks/useDoctorsSchedule';
 import { useMemo } from 'react';
 import { ScheduleCollapsible } from '@/components/ScheduleCollapsible';
-import { alert } from '@/components/ui/Alert';
+import { alert } from '@/components/Alert';
 
 type ScheduleModalRouteProp = RouteProp<RootStackParamList, 'ScheduleModal'>;
 

@@ -7,8 +7,8 @@ import { Home } from './screens/Home';
 import { NotFound } from './screens/NotFound';
 
 import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
+import { IconSymbol } from '@/components/IconSymbol';
+import TabBarBackground from '@/components/TabBarBackground';
 import { ScheduleModal } from './screens/ScheduleModal';
 
 const HomeTabs = createBottomTabNavigator({

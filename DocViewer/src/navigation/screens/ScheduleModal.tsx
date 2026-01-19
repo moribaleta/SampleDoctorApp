@@ -7,6 +7,8 @@ import { Schedule, Timeslot, useDoctorsSchedule } from '@/hooks/useDoctorsSchedu
 import { useMemo } from 'react';
 import { ScheduleCollapsible } from '@/components/ScheduleCollapsible';
 import { alert } from '@/components/Alert';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Header } from '@react-navigation/elements';
 
 type ScheduleModalRouteProp = RouteProp<RootStackParamList, 'ScheduleModal'>;
 
@@ -67,6 +69,8 @@ export const ScheduleModal = () => {
     return doctorName ? getDoctorByName(doctorName) : undefined;
   }, [doctorName, getDoctorByName]);
 
+  const safeAreaInsets = useSafeAreaInsets();
+
   const renderCell = (schedule: Schedule) => {
     return (
       <ScheduleCollapsible
@@ -82,7 +86,12 @@ export const ScheduleModal = () => {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView
+      style={[
+        styles.container,
+        { paddingTop: safeAreaInsets.top, paddingBottom: safeAreaInsets.bottom },
+      ]}
+    >
       <ThemedView style={styles.headerContainer}>
         <Typo type="title">{doctorWithSchedules?.name}</Typo>
         <Typo type="subtitle">Timezone: {doctorWithSchedules?.timezone}</Typo>
@@ -110,6 +119,7 @@ const styles = StyleSheet.create({
   },
 
   headerContainer: {
+    marginTop: 24,
     gap: 8,
   },
 

@@ -88,7 +88,7 @@ export function Appointments() {
 
   return (
     <View style={styles.container}>
-      <Header title="Schedule Appointments" />
+      <Header title="Scheduled Appointments" />
       <FlatList
         data={viewBookedSchedules}
         style={styles.listContainer}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Typo } from '@/components/Typo';
@@ -11,6 +11,7 @@ import { Schedule, Timeslot } from '@/hooks/useDoctorsSchedule';
 type ScheduleCollapsibleProps = Schedule & {
   timeslots: Timeslot[];
   onSelect: (dayOfWeek: string, timeslot: Timeslot) => void;
+  bookedTimeslots?: Timeslot[];
 };
 
 export const ScheduleCollapsible = ({
@@ -19,9 +20,19 @@ export const ScheduleCollapsible = ({
   availableUntil,
   timeslots,
   onSelect,
+  bookedTimeslots,
 }: ScheduleCollapsibleProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const theme = useColorScheme() ?? 'light';
+
+  const isTimeslotBooked = useCallback(
+    (timeslot: Timeslot) => {
+      return bookedTimeslots?.some(
+        (booked) => booked.timeStart === timeslot.timeStart && booked.timeEnd === timeslot.timeEnd,
+      );
+    },
+    [bookedTimeslots],
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -45,9 +56,16 @@ export const ScheduleCollapsible = ({
       {isOpen && (
         <ThemedView style={styles.content}>
           {timeslots.map((slot) => (
-            <TouchableOpacity key={slot.timeStart} onPress={() => onSelect(dayOfWeek, { ...slot })}>
+            <TouchableOpacity
+              key={slot.timeStart}
+              onPress={() => onSelect(dayOfWeek, { ...slot })}
+              disabled={isTimeslotBooked(slot)}
+            >
               <ThemedView style={styles.listItem} lightColor="#e0e0e0" darkColor="#2a2a2a">
-                <Typo>{`${slot.timeStart} - ${slot.timeEnd}`}</Typo>
+                <Typo
+                  type="default"
+                  style={{ textDecorationLine: isTimeslotBooked(slot) ? 'line-through' : 'none' }}
+                >{`${slot.timeStart} - ${slot.timeEnd}`}</Typo>
               </ThemedView>
             </TouchableOpacity>
           ))}

@@ -16,7 +16,7 @@ const DAY_OF_WEEK_ORDER = [
   'Friday',
   'Saturday',
   'Sunday',
-];
+] as const;
 
 export function Appointments() {
   const {

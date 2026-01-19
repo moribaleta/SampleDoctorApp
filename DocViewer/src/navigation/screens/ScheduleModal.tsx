@@ -1,7 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
 import { Typo } from '@/components/Typo';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import { StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, FlatList, Alert } from 'react-native';
 import { RootStackParamList } from '..';
 import { Schedule, Timeslot, useDoctorsSchedule } from '@/hooks/useDoctorsSchedule';
 import { useMemo } from 'react';
@@ -13,20 +13,41 @@ export const ScheduleModal = () => {
   const route = useRoute<ScheduleModalRouteProp>();
   const navigation = useNavigation();
   const { doctorName } = route.params;
-  const { getDoctorByName, bookSchedule } = useDoctorsSchedule();
+  const { userBookedSchedules, getDoctorByName, bookSchedule } = useDoctorsSchedule();
 
-  /* const userBookedScheduleOfCurrentDoctor = useMemo(() => {
-    return userBookedSchedules.data?.find((item) => item.doctorName === doctorName);
-  }, [doctorName, userBookedSchedules.data]); */
+  const bookedTimeslots = useMemo(() => {
+    return userBookedSchedules.data?.reduce<Record<string, Timeslot[]>>((acc, schedule) => {
+      if (!acc[schedule.dayOfWeek]) {
+        acc[schedule.dayOfWeek] = [];
+      }
+      acc[schedule.dayOfWeek].push(schedule.timeslot);
+      return acc;
+    }, {});
+  }, [userBookedSchedules.data]);
+
+  const timeslotAlreadyBooked = (dayOfWeek: string, timeslot: Timeslot) => {
+    return userBookedSchedules.data?.some(
+      (schedule) =>
+        schedule.dayOfWeek === dayOfWeek &&
+        schedule.timeslot.timeStart === timeslot.timeStart &&
+        schedule.timeslot.timeEnd === timeslot.timeEnd,
+    );
+  };
 
   const handleSetSchedule = (dayOfWeek: string, timeslot: Timeslot) => {
-    if (doctorName) {
-      bookSchedule({
-        doctorName,
-        dayOfWeek,
-        timeslot,
-      });
+    if (!doctorName) return;
+
+    //schedule already booked
+    if (timeslotAlreadyBooked(dayOfWeek, timeslot)) {
+      Alert.alert('Schedule already booked', 'You have already booked this schedule.');
+      return;
     }
+
+    bookSchedule({
+      doctorName,
+      dayOfWeek,
+      timeslot,
+    });
 
     navigation.goBack();
   };
@@ -36,11 +57,6 @@ export const ScheduleModal = () => {
   }, [doctorName, getDoctorByName]);
 
   const renderCell = (schedule: Schedule) => {
-    /* const isAlreadyBooked =
-      userBookedScheduleOfCurrentDoctor?.schedule.dayOfWeek === schedule.dayOfWeek &&
-      userBookedScheduleOfCurrentDoctor?.schedule.availableAt === schedule.availableAt &&
-      userBookedScheduleOfCurrentDoctor?.schedule.availableUntil === schedule.availableUntil; */
-
     return (
       <ScheduleCollapsible
         key={schedule.dayOfWeek}
@@ -49,6 +65,7 @@ export const ScheduleModal = () => {
         availableUntil={schedule.availableUntil}
         timeslots={schedule.timeslots}
         onSelect={handleSetSchedule}
+        bookedTimeslots={bookedTimeslots?.[schedule.dayOfWeek]}
       />
     );
   };

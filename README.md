@@ -50,5 +50,7 @@ this is sample doctor scheduler appointment
 - [@tanstack/react-query](https://tanstack.com/query)
 - [React Navigation](https://reactnavigation.org/)
 - [Async Storage](https://github.com/react-native-async-storage/async-storage)
+- [Jest](https://jestjs.io/)
+- [React Testing Library / React Native](https://testing-library.com/docs/react-testing-library/intro/)
 
 ---

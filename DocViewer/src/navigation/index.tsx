@@ -65,12 +65,15 @@ const RootStack = createNativeStackNavigator({
     },
     Modal: {
       screenOptions: {
-        presentation: 'formSheet',
+        presentation: 'modal',
         headerShown: true,
       },
       screens: {
         ScheduleModal: {
           screen: ScheduleModal,
+          options: {
+            title: 'Select Schedule',
+          },
           initialParams: {
             doctorName: undefined,
           },

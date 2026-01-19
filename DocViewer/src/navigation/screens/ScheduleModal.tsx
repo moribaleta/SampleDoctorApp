@@ -8,8 +8,6 @@ import { useMemo } from 'react';
 import { ScheduleCollapsible } from '@/components/ScheduleCollapsible';
 import { alert } from '@/components/Alert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Header } from '@react-navigation/elements';
-
 type ScheduleModalRouteProp = RouteProp<RootStackParamList, 'ScheduleModal'>;
 
 export const ScheduleModal = () => {

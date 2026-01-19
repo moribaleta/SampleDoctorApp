@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useLocaleStorage } from './useLocaleStorage';
+import { localStorage } from './localStorage';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
@@ -37,7 +37,7 @@ export type Timeslot = {
   timeEnd: string;
 };
 
-const fetchData = async (): Promise<DoctorSchedule[]> => {
+export const fetchDoctorData = async (): Promise<DoctorSchedule[]> => {
   const response = await fetch(
     'https://raw.githubusercontent.com/suyogshiftcare/jsontest/main/available.json',
   );
@@ -48,11 +48,11 @@ const fetchData = async (): Promise<DoctorSchedule[]> => {
   result
     .filter((entry): entry is DoctorFetchResults => {
       const isValid =
-        entry.name !== undefined &&
-        entry.timezone !== undefined &&
-        entry.day_of_week !== undefined &&
-        entry.available_at !== undefined &&
-        entry.available_until !== undefined;
+        !!entry.name &&
+        !!entry.timezone &&
+        !!entry.day_of_week &&
+        !!entry.available_at &&
+        !!entry.available_until;
 
       if (!isValid) {
         console.warn('Invalid entry found and skipped:', entry);
@@ -84,7 +84,7 @@ const fetchData = async (): Promise<DoctorSchedule[]> => {
   return Array.from(doctorSchedules.values());
 };
 
-const generateTimeslot = (
+export const generateTimeslot = (
   dayOfWeek: string,
   availableAt: string,
   availableUntil: string,
@@ -101,8 +101,6 @@ const generateTimeslot = (
     return timeslots;
   }
 
-  current = current.add(30, 'minute'); // Reset to start time
-
   while (current.add(30, 'minute').isBefore(endTime) || current.add(30, 'minute').isSame(endTime)) {
     const slot: Timeslot = {
       timeStart: current.format('h:mmA'),
@@ -117,14 +115,16 @@ const generateTimeslot = (
 };
 
 export const useDoctorsSchedule = () => {
-  const { getItem, setItem } = useLocaleStorage<{ [doctorName: string]: UserBookedSchedule[] }>(
+  const storage = localStorage<{ [doctorName: string]: UserBookedSchedule[] }>(
     'selectedSchedules',
     {},
   );
 
+  const { getItem, setItem } = storage;
+
   const queryDoctorSchedule = useQuery<DoctorSchedule[]>({
     queryKey: ['doctors'],
-    queryFn: fetchData,
+    queryFn: fetchDoctorData,
   });
 
   const queryUserBookedSchedules = useQuery<UserBookedSchedule[]>({
@@ -155,13 +155,12 @@ export const useDoctorsSchedule = () => {
     },
   });
 
-  const mutateCancelSchedule = useMutation<
-    void,
-    unknown,
-    { doctorName: string; timeslot: Timeslot }
-  >({
-    mutationFn: async ({ doctorName, timeslot }) => {
+  const mutateCancelSchedule = useMutation<void, unknown, UserBookedSchedule>({
+    mutationFn: async ({ doctorName, dayOfWeek, timeslot }) => {
       const prevItems = await getItem();
+
+      console.log('Updated schedules after cancellation:', prevItems);
+
       if (!prevItems || !prevItems[doctorName]) {
         return;
       }
@@ -169,7 +168,8 @@ export const useDoctorsSchedule = () => {
       const schedules = prevItems[doctorName].filter(
         (item) =>
           timeslot.timeStart !== item.timeslot.timeStart &&
-          timeslot.timeEnd !== item.timeslot.timeEnd,
+          timeslot.timeEnd !== item.timeslot.timeEnd &&
+          item.dayOfWeek !== dayOfWeek,
       );
 
       if (schedules.length === 0) {

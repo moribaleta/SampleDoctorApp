@@ -42,7 +42,7 @@ describe('E2E Tests for DocViewer App', () => {
     ) as jest.Mock;
   };
 
-  it('should run a basic test', async () => {
+  it('should run test successfully', async () => {
     mockFetch();
     const { getByText } = render(<App />);
 
